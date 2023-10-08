@@ -23,5 +23,5 @@ func main() {
 		log.Fatal().Err(err).Msg("failed to get quote from server")
 	}
 
-	log.Info().Msgf("success! quote is \"%s\"\n", quote)
+	log.Info().Msgf("success! quote is `%s`", quote)
 }

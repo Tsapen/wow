@@ -47,7 +47,7 @@ func NewServer(cfg *config.ServerConfig, challenger wow.Challenger, storage wow.
 func (s *Server) ListenAndServe() {
 	defer s.listener.Close()
 
-	log.Info().Msgf("Server started on %s\n", s.cfg.Address)
+	log.Info().Msgf("Server started on %s", s.cfg.Address)
 
 	for {
 		conn, err := s.listener.Accept()

@@ -1,14 +1,17 @@
 package tcp
 
 import (
+	"context"
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
 	"github.com/Tsapen/wow/internal/config"
 	"github.com/Tsapen/wow/internal/tcp/mocks"
+	"github.com/Tsapen/wow/internal/wow"
 )
 
 type testCase struct {
@@ -34,7 +37,7 @@ func TestHandle(t *testing.T) {
 
 				return true
 			})).Return(len(sr), nil).Once()
-			ch.On("Verify", "secret", solution).Return(true, nil).Once()
+			ch.On("Verify", "secret", solution).Return(nil).Once()
 			st.On("Quote", mock.Anything).Return("quote 1", nil).Once()
 			conn.On("Write", mock.Anything).Return(10, nil)
 
@@ -73,12 +76,13 @@ func TestHandle(t *testing.T) {
 
 				return true
 			})).Return(len(sr), nil).Once()
-			ch.On("Verify", "secret", "wrong_result").Return(false, nil).Once()
+			ch.On("Verify", "secret", "wrong_result").Return(wow.ErrWrongSolution).Once()
 
 			conn.On("Close", mock.Anything).Return(nil).Once()
 		},
 	}}
 
+	ctx := context.Background()
 	for _, tc := range testCases {
 		conn := mocks.NewConnMock(t)
 		storage := mocks.NewStorageMock(t)
@@ -92,6 +96,7 @@ func TestHandle(t *testing.T) {
 		)
 		assert.NoError(t, err)
 
-		server.handle(conn)
+		ctx = wow.WithReqID(ctx, uuid.NewString())
+		server.handle(ctx, conn)
 	}
 }
