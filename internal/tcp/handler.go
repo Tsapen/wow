@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
+
+	"github.com/Tsapen/wow/internal/wow"
 )
 
 type challengeResponse struct {
@@ -23,77 +24,56 @@ type quoteResponse struct {
 	Quote string `json:"quote"`
 }
 
-func logWithReqID(reqID string, format string, args ...any) {
-	message := fmt.Sprintf("[%s] ", reqID)
-	message += fmt.Sprintf(format, args...)
-
-	log.Print(message)
-}
-
-func (s *Server) handle(conn net.Conn) {
+func (s *Server) handle(ctx context.Context, conn net.Conn) (err error) {
 	conn.SetReadDeadline(time.Now().Add(s.cfg.Timeout))
 	conn.SetWriteDeadline(time.Now().Add(s.cfg.Timeout))
-	reqID := uuid.NewString()
 
-	defer closeConnection(reqID, conn)
+	logger := log.With().Str("request_id", wow.ReqIDFromCtx(ctx)).Logger()
 
-	logWithReqID(reqID, "start to handle connection")
+	defer func() {
+		if closeErr := conn.Close(); closeErr != nil {
+			err = wow.HandleErrPair(fmt.Errorf("close error: %w", closeErr), err)
 
-	ctx := context.Background()
+		} else {
+			logger.Info().Msg("connection closed")
+		}
+	}()
+
+	logger.Info().Msg("start to handle connection")
 
 	challenge, err := s.challenger.Generate()
 	if err != nil {
-		logWithReqID(reqID, "failed to generate challenge: `%s`", err)
-
-		return
+		return fmt.Errorf("failed to generate challenge: %w", err)
 	}
 
 	cr := challengeResponse{Challenge: challenge}
 	if err = json.NewEncoder(conn).Encode(&cr); err != nil {
-		logWithReqID(reqID, "send challenge: `%s`", err)
-
-		return
+		return fmt.Errorf("send challenge: %w", err)
 	}
 
-	logWithReqID(reqID, "challenge sent: `%s`", cr)
+	logger.Info().Any("request", cr).Msg("challenge sent")
 
 	sr := solutionRequest{}
 	if err = json.NewDecoder(conn).Decode(&sr); err != nil {
-		logWithReqID(reqID, "failed get solution: %s", err)
-
-		return
+		return fmt.Errorf("failed get solution: %w", err)
 	}
 
 	err = s.challenger.Verify(challenge, sr.Solution)
 	if err != nil {
-		logWithReqID(reqID, "failed to verify PoW solution: %s", err)
-
-		return
+		return fmt.Errorf("failed to verify PoW solution: %w", err)
 	}
 
 	quote, err := s.storage.Quote(ctx)
 	if err != nil {
-		logWithReqID(reqID, "failed to get quote: `%s`", err)
-
-		return
+		return fmt.Errorf("failed to get quote: %w", err)
 	}
 
 	qr := quoteResponse{Quote: quote}
 	if err = json.NewEncoder(conn).Encode(qr); err != nil {
-		logWithReqID(reqID, "failed to send quote response: `%s`", err)
-
-		return
+		return fmt.Errorf("failed to send quote response: %w`", err)
 	}
 
-	logWithReqID(reqID, "quote sent: `%s`", qr)
-}
+	logger.Info().Any("request", qr).Msg("quote sent")
 
-func closeConnection(reqID string, conn net.Conn) {
-	if err := conn.Close(); err != nil {
-		logWithReqID(reqID, "failed to close connection: `%s`", err)
-
-		return
-	}
-
-	logWithReqID(reqID, "connection is closed")
+	return nil
 }

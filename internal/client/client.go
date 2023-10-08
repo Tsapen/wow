@@ -22,7 +22,7 @@ type solutionRequest struct {
 	Solution string `json:"solution"`
 }
 
-type qouteResponse struct {
+type quoteResponse struct {
 	Quote string `json:"quote"`
 }
 
@@ -60,7 +60,7 @@ func (c *client) GetQuote() (quote string, err error) {
 		return "", fmt.Errorf("send PoW solution: %w", err)
 	}
 
-	qr := qouteResponse{}
+	qr := quoteResponse{}
 	if err = json.NewDecoder(conn).Decode(&qr); err != nil {
 		return "", fmt.Errorf("get quote: %w", err)
 	}

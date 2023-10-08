@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"github.com/rs/zerolog/log"
 
 	"github.com/Tsapen/wow/internal/challenger"
 	"github.com/Tsapen/wow/internal/config"
@@ -17,7 +17,7 @@ type Config struct {
 func main() {
 	cfg, err := config.GetForServer()
 	if err != nil {
-		log.Fatal("failed to read config: ", err)
+		log.Fatal().Err(err).Msg("failed to read config")
 	}
 
 	solver := solver.New()
@@ -28,7 +28,7 @@ func main() {
 
 	server, err := tcp.NewServer(cfg, challenger, storage)
 	if err != nil {
-		log.Fatal("failed to run tcp server: ", err)
+		log.Fatal().Err(err).Msg("failed to run tcp server")
 	}
 
 	server.ListenAndServe()

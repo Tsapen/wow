@@ -1,9 +1,12 @@
 package tcp
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"net"
+
+	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 
 	"github.com/Tsapen/wow/internal/config"
 	"github.com/Tsapen/wow/internal/wow"
@@ -44,12 +47,12 @@ func NewServer(cfg *config.ServerConfig, challenger wow.Challenger, storage wow.
 func (s *Server) ListenAndServe() {
 	defer s.listener.Close()
 
-	log.Printf("Server started on %s\n", s.cfg.Address)
+	log.Info().Msgf("Server started on %s\n", s.cfg.Address)
 
 	for {
 		conn, err := s.listener.Accept()
 		if err != nil {
-			log.Print("failed to accept connection:", err.Error())
+			log.Warn().Err(err).Msgf("failed to accept connection")
 
 			return
 		}
@@ -57,7 +60,14 @@ func (s *Server) ListenAndServe() {
 		go func() {
 			<-s.sem
 
-			s.handle(conn)
+			ctx := context.Background()
+			reqID := uuid.NewString()
+			ctx = wow.WithReqID(ctx, reqID)
+			if err := s.handle(ctx, conn); err != nil {
+				log.Info().Str("request_id", reqID).Err(err).Msgf("failed to handle connection")
+
+				return
+			}
 
 			s.sem <- struct{}{}
 		}()

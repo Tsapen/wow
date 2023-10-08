@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"github.com/rs/zerolog/log"
 
 	"github.com/Tsapen/wow/internal/client"
 	"github.com/Tsapen/wow/internal/config"
@@ -11,7 +11,7 @@ import (
 func main() {
 	cfg, err := config.GetForClient()
 	if err != nil {
-		log.Fatal("failed to read config: ", err)
+		log.Fatal().Err(err).Msg("failed to read config")
 	}
 
 	solver := solver.New()
@@ -20,8 +20,8 @@ func main() {
 
 	quote, err := client.GetQuote()
 	if err != nil {
-		log.Fatal("failed to get quote from server: ", err)
+		log.Fatal().Err(err).Msg("failed to get quote from server")
 	}
 
-	log.Printf("success! quote is \"%s\"\n", quote)
+	log.Info().Msgf("success! quote is \"%s\"\n", quote)
 }
