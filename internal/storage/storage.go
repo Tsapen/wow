@@ -7,12 +7,12 @@ import (
 	"sync"
 )
 
-type storage struct {
+type Storage struct {
 	mux     *sync.RWMutex
 	content []string
 }
 
-func New() *storage {
+func New() *Storage {
 	content := []string{
 		"And again, strong drinks are not for the belly, but for the washing of your bodies.",
 		"And barley for all useful animals, and for mild drinks, as also other grain.",
@@ -26,13 +26,13 @@ func New() *storage {
 		"In consequence of evils and designs which do and will exist in the hearts of conspiring men in the last days.",
 	}
 
-	return &storage{
+	return &Storage{
 		content: content,
 		mux:     &sync.RWMutex{},
 	}
 }
 
-func (s *storage) Quote(context.Context) (string, error) {
+func (s *Storage) Quote(context.Context) (string, error) {
 	s.mux.RLock()
 	defer s.mux.RUnlock()
 

@@ -9,7 +9,7 @@ import (
 	"github.com/Tsapen/wow/internal/wow"
 )
 
-type client struct {
+type Client struct {
 	cfg    *config.ClientConfig
 	solver wow.Solver
 }
@@ -26,14 +26,14 @@ type quoteResponse struct {
 	Quote string `json:"quote"`
 }
 
-func New(cfg *config.ClientConfig, solver wow.Solver) *client {
-	return &client{
+func New(cfg *config.ClientConfig, solver wow.Solver) *Client {
+	return &Client{
 		cfg:    cfg,
 		solver: solver,
 	}
 }
 
-func (c *client) GetQuote() (quote string, err error) {
+func (c *Client) GetQuote() (quote string, err error) {
 	conn, err := net.Dial("tcp", c.cfg.Address)
 	if err != nil {
 		return "", fmt.Errorf("connect to the server: %w", err)

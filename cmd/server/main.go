@@ -20,13 +20,13 @@ func main() {
 		log.Fatal().Err(err).Msg("failed to read config")
 	}
 
-	solver := solver.New()
+	solverService := solver.New()
 
-	challenger := challenger.New(solver)
+	challengerService := challenger.New(solverService)
 
-	storage := storage.New()
+	st := storage.New()
 
-	server, err := tcp.NewServer(cfg, challenger, storage)
+	server, err := tcp.NewServer(cfg, challengerService, st)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to run tcp server")
 	}

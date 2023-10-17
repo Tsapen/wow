@@ -16,19 +16,19 @@ const (
 		`0123456789`
 )
 
-type challenger struct {
+type Challenger struct {
 	solver wow.Solver
 }
 
 // New creates a new challenger.
-func New(solver wow.Solver) *challenger {
-	return &challenger{
+func New(solver wow.Solver) *Challenger {
+	return &Challenger{
 		solver: solver,
 	}
 }
 
 // Generate makes a random challenge for PoW.
-func (*challenger) Generate() (string, error) {
+func (*Challenger) Generate() (string, error) {
 	randomString := make([]byte, length)
 
 	for i := range randomString {
@@ -43,7 +43,7 @@ func (*challenger) Generate() (string, error) {
 }
 
 // Verify checks the client's PoW solution.
-func (c *challenger) Verify(input, clientSolution string) error {
+func (c *Challenger) Verify(input, clientSolution string) error {
 	serverSolution, err := c.solver.Solve(input)
 	if err != nil {
 		return fmt.Errorf("solve challenge \"%s\": %w", input, err)

@@ -5,15 +5,15 @@ import (
 	"fmt"
 )
 
-type solver struct{}
+type Solver struct{}
 
 // New creates solver.
-func New() *solver {
-	return &solver{}
+func New() *Solver {
+	return &Solver{}
 }
 
 // Solve calculates SHA-256 hash from input.
-func (s *solver) Solve(input string) (string, error) {
+func (s *Solver) Solve(input string) (string, error) {
 	hash := sha256.New()
 
 	_, err := hash.Write([]byte(input))
